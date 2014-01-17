@@ -59,7 +59,7 @@ sudo apt-get install -y makepasswd curl git-core openssh-server redis-server pyt
 MYSQL_ROOT_PASSWORD=$(makepasswd --char=25)
 MYSQL_GIT_PASSWORD=$(makepasswd --char=25)
 
-sudo add-apt-repository ppa:brightbox/ruby-ng-experimental
+sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
 sudo apt-get update
 sudo apt-get install -y ruby2.0 ruby2.0-dev
 
