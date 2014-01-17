@@ -51,24 +51,29 @@ fi
 echo -e "\n*== Installing new packages...\n"
 sudo apt-get update -y
 sudo apt-get upgrade -y
-sudo apt-get install -y build-essential makepasswd zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev curl git-core openssh-server redis-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
+#sudo apt-get install -y build-essential makepasswd zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev curl git-core openssh-server redis-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
+sudo apt-get install -y makepasswd curl git-core openssh-server redis-server python-docutils python-software-properties
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
 
 # Generate passwords for MySQL root and gitlab users.
 MYSQL_ROOT_PASSWORD=$(makepasswd --char=25)
 MYSQL_GIT_PASSWORD=$(makepasswd --char=25)
 
+sudo add-apt-repository ppa:brightbox/ruby-ng-experimental
+sudo apt-get update
+sudo apt-get install -y ruby2.0 ruby2.0-dev
+
 ##
 # Download and compile Ruby
 #
-echo -e "\n*== Downloading and configuring Ruby...\n"
-mkdir /tmp/ruby && cd /tmp/ruby
-curl --progress ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p247.tar.gz | tar xz
-cd ruby-2.0.0-p247
-./configure
-make
-sudo make install
-sudo gem install bundler --no-ri --no-rdoc
+#echo -e "\n*== Downloading and configuring Ruby...\n"
+#mkdir /tmp/ruby && cd /tmp/ruby
+#curl --progress ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p353.tar.gz | tar xz
+#cd ruby-2.0.0-p353
+#./configure
+#make
+#sudo make install
+#sudo gem install bundler --no-ri --no-rdoc
 
 # Add the git user.
 sudo adduser --disabled-login --gecos 'GitLab' $APP_USER
@@ -116,7 +121,7 @@ echo -e "\n*== Installing GitLab Shell...\n"
 cd $USER_ROOT
 sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlab-shell.git
 cd gitlab-shell
-sudo -u $APP_USER -H git checkout v1.7.1
+sudo -u $APP_USER -H git checkout master 
 sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' /home/git/gitlab-shell/config.yml
 sudo -u $APP_USER -H ./bin/install
@@ -128,7 +133,7 @@ echo -e "\n*== Installing GitLab...\n"
 cd $USER_ROOT
 sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlabhq.git gitlab
 cd $APP_ROOT
-sudo -u $APP_USER -H git checkout 6-1-stable
+sudo -u $APP_USER -H git checkout 6-4-stable
 sudo -u $APP_USER -H mkdir $USER_ROOT/gitlab-satellites
 sudo -u $APP_USER -H cp $APP_ROOT/config/gitlab.yml.example $APP_ROOT/config/gitlab.yml
 sudo sed -i "s/host: localhost/host: ${DOMAIN_VAR}/" $APP_ROOT/config/gitlab.yml
