@@ -61,7 +61,9 @@ MYSQL_GIT_PASSWORD=$(makepasswd --char=25)
 
 sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
 sudo apt-get update
+sudo apt-get purge -y ruby1.8
 sudo apt-get install -y ruby2.0 ruby2.0-dev
+sudo gem install bundle
 
 ##
 # Download and compile Ruby
@@ -191,7 +193,7 @@ echo -e "\n*== Starting Gitlab!\n"
 sudo service gitlab start
 sudo service nginx restart
 
-sudo echo -e "root: ${MYSQL_ROOT_PASSWORD}\ngitlab: ${MYSQL_GIT_PASSWORD}" > $APP_ROOT/config/mysql.yml
+echo -e "root: ${MYSQL_ROOT_PASSWORD}\ngitlab: ${MYSQL_GIT_PASSWORD}"  sudo tee -a $APP_ROOT/config/mysql.yml
 sudo -u $APP_USER -H chmod o-rwx $APP_ROOT/config/database.yml
 
 echo -e "*==================================================================*\n"
