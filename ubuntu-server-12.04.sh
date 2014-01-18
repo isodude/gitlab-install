@@ -25,8 +25,14 @@ USER_ROOT=/home/$APP_USER
 # Set the application root.
 APP_ROOT=$USER_ROOT/gitlab
 
+GITLAB_SHELL_ROOT=$USER_ROOT/gitlab-shell
+
 # Set the URL for the GitLab instance.
 GITLAB_URL="http:\/\/$DOMAIN_VAR\/"
+
+GITLAB_SHELL_BRANCH="master"
+
+GITLAB_BRANCH="6-4-stable"
 
 # Check for domain variable.
 if [ $DOMAIN_VAR ]; then
@@ -59,23 +65,15 @@ sudo apt-get install -y build-essential makepasswd curl git-core openssh-server 
 MYSQL_ROOT_PASSWORD=$(makepasswd --char=25)
 MYSQL_GIT_PASSWORD=$(makepasswd --char=25)
 
+##
+# Download and compile Ruby
+#
+echo -e "\n*== Downloading and configuring Ruby...\n"
 sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
 sudo apt-get update
 sudo apt-get purge -y ruby1.8
 sudo apt-get install -y ruby2.0 ruby2.0-dev
-sudo gem install bundle
-
-##
-# Download and compile Ruby
-#
-#echo -e "\n*== Downloading and configuring Ruby...\n"
-#mkdir /tmp/ruby && cd /tmp/ruby
-#curl --progress ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p353.tar.gz | tar xz
-#cd ruby-2.0.0-p353
-#./configure
-#make
-#sudo make install
-#sudo gem install bundler --no-ri --no-rdoc
+sudo gem install bundler --no-ri --no-rdoc
 
 # Add the git user.
 sudo adduser --disabled-login --gecos 'GitLab' $APP_USER
@@ -88,16 +86,16 @@ echo mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD | sud
 echo mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD | sudo debconf-set-selections
 sudo apt-get install -y mysql-server mysql-client libmysqlclient-dev
 
+echo -e "\n*== Configuring MySQL Server...\n"
 # Secure the MySQL installation and add GitLab user and database.
 sudo echo -e "GRANT USAGE ON *.* TO ''@'localhost';
 DROP USER ''@'localhost';
 DROP DATABASE IF EXISTS test;
-CREATE USER 'gitlab'@'localhost' IDENTIFIED BY '$MYSQL_GIT_PASSWORD';
+CREATE USER 'git'@'localhost' IDENTIFIED BY '$MYSQL_GIT_PASSWORD';
 CREATE DATABASE IF NOT EXISTS gitlabhq_production DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
-GRANT SELECT, LOCK TABLES, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON gitlabhq_production.* TO 'gitlab'@'localhost';
+GRANT SELECT, LOCK TABLES, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON gitlabhq_production.* TO 'git'@'localhost';
 " > /tmp/gitlab.sql
 mysql -u root -p$MYSQL_ROOT_PASSWORD -e "SOURCE /tmp/gitlab.sql"
-
 sudo rm /tmp/gitlab.sql
 
 ##
@@ -119,11 +117,10 @@ sudo -u $APP_USER -H git config --global core.autocrlf input
 ## 
 # Install GitLab Shell
 #
-echo -e "\n*== Installing GitLab Shell...\n"
-cd $USER_ROOT
-sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlab-shell.git
-cd gitlab-shell
-sudo -u $APP_USER -H git checkout master 
+echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH)...\n"
+sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlab-shell.git $GITLAB_SHELL_ROOT
+cd $_
+sudo -u $APP_USER -H git checkout $GITLAB_SHELL_BRANCH
 sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' /home/git/gitlab-shell/config.yml
 sudo -u $APP_USER -H ./bin/install
@@ -131,16 +128,14 @@ sudo -u $APP_USER -H ./bin/install
 ## 
 # Install GitLab
 #
-echo -e "\n*== Installing GitLab...\n"
-cd $USER_ROOT
-sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlabhq.git gitlab
-cd $APP_ROOT
-sudo -u $APP_USER -H git checkout 6-4-stable
+echo -e "\n*== Installing GitLab ($GITLAB_BRANCH)...\n"
+sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlabhq.git $APP_ROOT
+cd $_
+sudo -u $APP_USER -H git checkout $GITLAB_BRANCH
 sudo -u $APP_USER -H mkdir $USER_ROOT/gitlab-satellites
 sudo -u $APP_USER -H cp $APP_ROOT/config/gitlab.yml.example $APP_ROOT/config/gitlab.yml
 sudo sed -i "s/host: localhost/host: ${DOMAIN_VAR}/" $APP_ROOT/config/gitlab.yml
 sudo -u $APP_USER cp config/database.yml.mysql config/database.yml
-sudo sed -i 's/username: root/username: gitlab/' $APP_ROOT/config/database.yml
 sudo sed -i 's/"secure password"/"'$MYSQL_GIT_PASSWORD'"/' $APP_ROOT/config/database.yml
 sudo -u $APP_USER -H chmod o-rwx config/database.yml
 sudo -u $APP_USER -H cp config/unicorn.rb.example config/unicorn.rb
@@ -149,16 +144,24 @@ sudo -u $APP_USER -H cp config/unicorn.rb.example config/unicorn.rb
 # Update permissions.
 #
 echo -e "\n*== Updating permissions...\n"
-sudo -u $APP_USER -H mkdir tmp/pids/
-sudo -u $APP_USER -H mkdir tmp/sockets/
-sudo -u $APP_USER -H mkdir public/uploads
-sudo chown -R $APP_USER log/
-sudo chown -R $APP_USER tmp/
-sudo chmod -R u+rwX log/
-sudo chmod -R u+rwX tmp/
-sudo chmod -R u+rwX tmp/pids/
-sudo chmod -R u+rwX tmp/sockets/
-sudo chmod -R u+rwX public/uploads
+
+# Make sure GitLab can write to the log/ and tmp/ directories
+for folder in log/ tmp/
+do
+	sudo chown -R $APP_USER $folder	
+	sudo chmod -R u+rwX $folder
+done
+
+# Create public/uploads directory otherwise backup will fail
+# Create directories for sockets/pids and make sure GitLab can write to them
+for folder in tmp/pids/ tmp/sockets/ public/uploads
+do
+	if [[ ! -d $folder ]]
+	then
+		sudo -u $APP_USER -H mkdir $folder
+		sudo chmod -R u+rwX $folder
+	fi
+done
 
 ##
 # Install required Gems.
