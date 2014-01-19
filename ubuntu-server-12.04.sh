@@ -118,9 +118,9 @@ sudo -u $APP_USER -H git config --global core.autocrlf input
 # Install GitLab Shell
 #
 echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH)...\n"
-sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlab-shell.git $GITLAB_SHELL_ROOT
+sudo -u $APP_USER -H curl https://github.com/gitlabhq/gitlab-shell/archive/$GITLAB_SHELL_BRANCH.zip -O /tmp/$GITLAB_SHELL_BRANCH.zip
+sudo -u $APP_USER -H unzip /tmp/$GITLAB_SHELL_BRANCH.zip -d $APP_SHELL_ROOT
 cd $_
-sudo -u $APP_USER -H git checkout $GITLAB_SHELL_BRANCH
 sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' /home/git/gitlab-shell/config.yml
 sudo -u $APP_USER -H ./bin/install
@@ -129,9 +129,9 @@ sudo -u $APP_USER -H ./bin/install
 # Install GitLab
 #
 echo -e "\n*== Installing GitLab ($GITLAB_BRANCH)...\n"
-sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlabhq.git $APP_ROOT
+sudo -u $APP_USER -H curl https://github.com/gitlabhq/gitlabhq/archive/$GITLAB_BRANCH.zip -O /tmp/$GITLAB_BRANCH.zip
+sudo -u $APP_USER -H unzip /tmp/$GITLAB_BRANCH.zip -d $APP_ROOT
 cd $_
-sudo -u $APP_USER -H git checkout $GITLAB_BRANCH
 sudo -u $APP_USER -H mkdir $USER_ROOT/gitlab-satellites
 sudo -u $APP_USER -H cp $APP_ROOT/config/gitlab.yml.example $APP_ROOT/config/gitlab.yml
 sudo sed -i "s/host: localhost/host: ${DOMAIN_VAR}/" $APP_ROOT/config/gitlab.yml
