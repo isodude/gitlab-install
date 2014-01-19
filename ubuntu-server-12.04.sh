@@ -21,16 +21,16 @@
 error_log="error_log"
 
 function install_packages() {
-  echo -e "\n*== Install $0 "
+  echo -e "\n*== Install "
   until [ -z $1 ]
   do
     sudo apt-get install -qq -y $1 1>/dev/null 2>>$error_log
     ret=$?
     if [[ $ret -ne 0 ]]
     then
-      echo -e "\n*== Failed to install $1\n"
+      echo -e "$1(FAILED) "
     else
-      echo -e "."
+      echo -e "$1 "
     fi
     shift
   done
@@ -74,8 +74,8 @@ fi
 # Installing Packages
 #
 echo -e "\n*== Installing new packages...\n"
-sudo apt-get update -y
-sudo apt-get upgrade -y
+sudo apt-get update -qq -y
+sudo apt-get upgrade -qq -y
 #sudo apt-get install -y build-essential makepasswd zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev curl git-core openssh-server redis-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
 install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties unzip
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
@@ -94,9 +94,9 @@ install_packages redis-server
 # Download and compile Ruby
 #
 echo -e "\n*== Downloading and configuring Ruby...\n"
-sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
-sudo apt-get update
-sudo apt-get purge -y ruby1.8
+sudo add-apt-repository -qq -y ppa:brightbox/ruby-ng-experimental
+sudo apt-get update -qq
+sudo apt-get purge -qq -y ruby1.8
 install_packages ruby2.0 ruby2.0-dev
 sudo gem install bundler --no-ri --no-rdoc
 
@@ -128,8 +128,8 @@ sudo rm /tmp/gitlab.sql
 # Update Git
 #
 echo -e "\n*== Updating Git...\n"
-sudo add-apt-repository -y ppa:git-core/ppa
-sudo apt-get update
+sudo add-apt-repository -qq -y ppa:git-core/ppa
+sudo apt-get update -qq
 install_packages git
 
 ##
@@ -145,7 +145,8 @@ sudo -u $APP_USER -H git config --global core.autocrlf input
 #
 echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH)...\n"
 sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlab-shell/archive/$GITLAB_SHELL_BRANCH.zip -o /tmp/$GITLAB_SHELL_BRANCH.zip
-sudo -u $APP_USER -H unzip /tmp/$GITLAB_SHELL_BRANCH.zip -d $GITLAB_SHELL_ROOT
+sudo -u $APP_USER -H unzip /tmp/$GITLAB_SHELL_BRANCH.zip -d $USER_ROOT
+mv $USER_ROOT/gitlab_shell_$GITLAB_SHELL_BRANCH $GITLAB_SHELL_ROOT
 cd $_
 sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' /home/git/gitlab-shell/config.yml
@@ -156,7 +157,8 @@ sudo -u $APP_USER -H ./bin/install
 #
 echo -e "\n*== Installing GitLab ($GITLAB_BRANCH)...\n"
 sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlabhq/archive/$GITLAB_BRANCH.zip -o /tmp/$GITLAB_BRANCH.zip
-sudo -u $APP_USER -H unzip /tmp/$GITLAB_BRANCH.zip -d $APP_ROOT
+sudo -u $APP_USER -H unzip /tmp/$GITLAB_BRANCH.zip -d $USER_ROOT
+mv $USER_ROOT/gitlabhq_$GITLAB_BRANCH $APP_ROOT
 cd $_
 sudo -u $APP_USER -H mkdir $USER_ROOT/gitlab-satellites
 sudo -u $APP_USER -H cp $APP_ROOT/config/gitlab.yml.example $APP_ROOT/config/gitlab.yml
