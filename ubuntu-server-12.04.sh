@@ -18,6 +18,23 @@
 # curl https://raw.github.com/caseyscarborough/gitlab-install/master/ubuntu-server-12.04.sh | 
 #   sudo DOMAIN_VAR=gitlab.example.com bash
 
+function install_packages() {
+  echo -e "\n*== Install $0 "
+  until [ -z $1 ]
+  do
+    sudo apt-get install -qq -y $1
+    ret=$?
+    if [[ $ret -ne 0 ]]
+    then
+      echo -e "\n*== Failed to install $1\n"
+    else
+      echo -e "."
+    fi
+    shift
+  done
+  echo -e "complete\n"
+}
+
 # Set the application user and home directory.
 APP_USER=git
 USER_ROOT=/home/$APP_USER
@@ -58,12 +75,18 @@ echo -e "\n*== Installing new packages...\n"
 sudo apt-get update -y
 sudo apt-get upgrade -y
 #sudo apt-get install -y build-essential makepasswd zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev curl git-core openssh-server redis-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
-sudo apt-get install -y build-essential makepasswd curl git-core openssh-server redis-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
+install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties unzip
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
 
 # Generate passwords for MySQL root and gitlab users.
 MYSQL_ROOT_PASSWORD=$(makepasswd --char=25)
 MYSQL_GIT_PASSWORD=$(makepasswd --char=25)
+
+##
+# Installing redis
+#
+echo -e "\n*== Installing redis...\n"
+sudo apt+get install redis-server
 
 ##
 # Download and compile Ruby
@@ -72,7 +95,7 @@ echo -e "\n*== Downloading and configuring Ruby...\n"
 sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
 sudo apt-get update
 sudo apt-get purge -y ruby1.8
-sudo apt-get install -y ruby2.0 ruby2.0-dev
+install_packages ruby2.0 ruby2.0-dev
 sudo gem install bundler --no-ri --no-rdoc
 
 # Add the git user.
@@ -84,7 +107,7 @@ sudo adduser --disabled-login --gecos 'GitLab' $APP_USER
 echo -e "\n*== Installing MySQL Server...\n"
 echo mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD | sudo debconf-set-selections
 echo mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD | sudo debconf-set-selections
-sudo apt-get install -y mysql-server mysql-client libmysqlclient-dev
+install_packages mysql-server mysql-client libmysqlclient-dev
 
 echo -e "\n*== Configuring MySQL Server...\n"
 # Secure the MySQL installation and add GitLab user and database.
@@ -104,7 +127,7 @@ sudo rm /tmp/gitlab.sql
 echo -e "\n*== Updating Git...\n"
 sudo add-apt-repository -y ppa:git-core/ppa
 sudo apt-get update
-sudo apt-get install -y git
+install_packages git
 
 ##
 # Set up the Git configuration.
@@ -118,7 +141,7 @@ sudo -u $APP_USER -H git config --global core.autocrlf input
 # Install GitLab Shell
 #
 echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH)...\n"
-sudo -u $APP_USER -H curl https://github.com/gitlabhq/gitlab-shell/archive/$GITLAB_SHELL_BRANCH.zip -O /tmp/$GITLAB_SHELL_BRANCH.zip
+sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlab-shell/archive/$GITLAB_SHELL_BRANCH.zip -o /tmp/$GITLAB_SHELL_BRANCH.zip
 sudo -u $APP_USER -H unzip /tmp/$GITLAB_SHELL_BRANCH.zip -d $APP_SHELL_ROOT
 cd $_
 sudo -u $APP_USER -H cp config.yml.example config.yml
@@ -129,7 +152,7 @@ sudo -u $APP_USER -H ./bin/install
 # Install GitLab
 #
 echo -e "\n*== Installing GitLab ($GITLAB_BRANCH)...\n"
-sudo -u $APP_USER -H curl https://github.com/gitlabhq/gitlabhq/archive/$GITLAB_BRANCH.zip -O /tmp/$GITLAB_BRANCH.zip
+sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlabhq/archive/$GITLAB_BRANCH.zip -o /tmp/$GITLAB_BRANCH.zip
 sudo -u $APP_USER -H unzip /tmp/$GITLAB_BRANCH.zip -d $APP_ROOT
 cd $_
 sudo -u $APP_USER -H mkdir $USER_ROOT/gitlab-satellites
@@ -185,7 +208,7 @@ sudo update-rc.d gitlab defaults 21
 # Nginx installation
 #
 echo -e "\n*== Installing Nginx...\n"
-sudo apt-get install -y nginx
+install_packages nginx
 sudo cp lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab
 sudo ln -s /etc/nginx/sites-available/gitlab /etc/nginx/sites-enabled/gitlab
 sudo sed -i "s/YOUR_SERVER_FQDN/${DOMAIN_VAR}/" /etc/nginx/sites-enabled/gitlab
