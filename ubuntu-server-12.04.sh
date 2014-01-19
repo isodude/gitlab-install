@@ -18,11 +18,13 @@
 # curl https://raw.github.com/caseyscarborough/gitlab-install/master/ubuntu-server-12.04.sh | 
 #   sudo DOMAIN_VAR=gitlab.example.com bash
 
+error_log="error_log"
+
 function install_packages() {
   echo -e "\n*== Install $0 "
   until [ -z $1 ]
   do
-    sudo apt-get install -qq -y $1
+    sudo apt-get install -qq -y $1 1>/dev/null 2>>$error_log
     ret=$?
     if [[ $ret -ne 0 ]]
     then
@@ -86,7 +88,7 @@ MYSQL_GIT_PASSWORD=$(makepasswd --char=25)
 # Installing redis
 #
 echo -e "\n*== Installing redis...\n"
-sudo apt+get install redis-server
+install_packages redis-server
 
 ##
 # Download and compile Ruby
@@ -113,6 +115,7 @@ echo -e "\n*== Configuring MySQL Server...\n"
 # Secure the MySQL installation and add GitLab user and database.
 sudo echo -e "GRANT USAGE ON *.* TO ''@'localhost';
 DROP USER ''@'localhost';
+DROP USER 'git'@'localhost';
 DROP DATABASE IF EXISTS test;
 CREATE USER 'git'@'localhost' IDENTIFIED BY '$MYSQL_GIT_PASSWORD';
 CREATE DATABASE IF NOT EXISTS gitlabhq_production DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
@@ -142,7 +145,7 @@ sudo -u $APP_USER -H git config --global core.autocrlf input
 #
 echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH)...\n"
 sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlab-shell/archive/$GITLAB_SHELL_BRANCH.zip -o /tmp/$GITLAB_SHELL_BRANCH.zip
-sudo -u $APP_USER -H unzip /tmp/$GITLAB_SHELL_BRANCH.zip -d $APP_SHELL_ROOT
+sudo -u $APP_USER -H unzip /tmp/$GITLAB_SHELL_BRANCH.zip -d $GITLAB_SHELL_ROOT
 cd $_
 sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' /home/git/gitlab-shell/config.yml
