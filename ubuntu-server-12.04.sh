@@ -158,7 +158,7 @@ sudo -u $APP_USER -H ./bin/install
 echo -e "\n*== Installing GitLab ($GITLAB_BRANCH)...\n"
 sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlabhq/archive/$GITLAB_BRANCH.zip -o /tmp/$GITLAB_BRANCH.zip
 sudo -u $APP_USER -H unzip /tmp/$GITLAB_BRANCH.zip -d $USER_ROOT
-mv $USER_ROOT/gitlabhq_$GITLAB_BRANCH $APP_ROOT
+mv $USER_ROOT/gitlabhq-$GITLAB_BRANCH $APP_ROOT
 cd $_
 sudo -u $APP_USER -H mkdir $USER_ROOT/gitlab-satellites
 sudo -u $APP_USER -H cp $APP_ROOT/config/gitlab.yml.example $APP_ROOT/config/gitlab.yml
