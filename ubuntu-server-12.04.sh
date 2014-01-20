@@ -113,7 +113,6 @@ echo -e "\n*== Configuring MySQL Server...\n"
 # Secure the MySQL installation and add GitLab user and database.
 sudo echo -e "GRANT USAGE ON *.* TO ''@'localhost';
 DROP USER ''@'localhost';
-DROP USER 'git'@'localhost';
 DROP DATABASE IF EXISTS test;
 CREATE USER 'git'@'localhost' IDENTIFIED BY '$MYSQL_GIT_PASSWORD';
 CREATE DATABASE IF NOT EXISTS gitlabhq_production DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
