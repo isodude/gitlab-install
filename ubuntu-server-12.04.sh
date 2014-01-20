@@ -18,19 +18,17 @@
 # curl https://raw.github.com/caseyscarborough/gitlab-install/master/ubuntu-server-12.04.sh | 
 #   sudo DOMAIN_VAR=gitlab.example.com bash
 
-error_log="error_log"
-
 function install_packages() {
-  echo -e "\n*== Install "
+  echo -n "\n*== Install "
   until [ -z $1 ]
   do
-    sudo apt-get install -qq -y $1 1>/dev/null 2>>$error_log
+    sudo apt-get install -qq -y $1
     ret=$?
     if [[ $ret -ne 0 ]]
     then
-      echo -e "$1(FAILED) "
+      echo -n "$1(FAILED) "
     else
-      echo -e "$1 "
+      echo -n "$1 "
     fi
     shift
   done
@@ -77,7 +75,7 @@ echo -e "\n*== Installing new packages...\n"
 sudo apt-get update -qq -y
 sudo apt-get upgrade -qq -y
 #sudo apt-get install -y build-essential makepasswd zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev curl git-core openssh-server redis-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
-install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties unzip
+install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
 
 # Generate passwords for MySQL root and gitlab users.
@@ -144,22 +142,20 @@ sudo -u $APP_USER -H git config --global core.autocrlf input
 # Install GitLab Shell
 #
 echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH)...\n"
-sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlab-shell/archive/$GITLAB_SHELL_BRANCH.zip -o /tmp/$GITLAB_SHELL_BRANCH.zip
-sudo -u $APP_USER -H unzip /tmp/$GITLAB_SHELL_BRANCH.zip -d $USER_ROOT
-mv $USER_ROOT/gitlab_shell_$GITLAB_SHELL_BRANCH $GITLAB_SHELL_ROOT
-cd $_
+sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlab-shell.git $GITLAB_SHELL_ROOT
+cd $GITLAB_SHELL_ROOT
+sudo -u $APP_USER -H git checkout $GITLAB_SHELL_BRANCH
 sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' /home/git/gitlab-shell/config.yml
 sudo -u $APP_USER -H ./bin/install
-
+sudo -u $APP_USER -H git commit -am "Initial config"
 ## 
 # Install GitLab
 #
 echo -e "\n*== Installing GitLab ($GITLAB_BRANCH)...\n"
-sudo -u $APP_USER -H curl -L https://github.com/gitlabhq/gitlabhq/archive/$GITLAB_BRANCH.zip -o /tmp/$GITLAB_BRANCH.zip
-sudo -u $APP_USER -H unzip /tmp/$GITLAB_BRANCH.zip -d $USER_ROOT
-mv $USER_ROOT/gitlabhq-$GITLAB_BRANCH $APP_ROOT
-cd $_
+sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlabhq.git $APP_ROOT
+cd $APP_ROOT
+sudo -u $APP_USER -H git checkout $GITLAB_BRANCH
 sudo -u $APP_USER -H mkdir $USER_ROOT/gitlab-satellites
 sudo -u $APP_USER -H cp $APP_ROOT/config/gitlab.yml.example $APP_ROOT/config/gitlab.yml
 sudo sed -i "s/host: localhost/host: ${DOMAIN_VAR}/" $APP_ROOT/config/gitlab.yml
@@ -167,6 +163,7 @@ sudo -u $APP_USER cp config/database.yml.mysql config/database.yml
 sudo sed -i 's/"secure password"/"'$MYSQL_GIT_PASSWORD'"/' $APP_ROOT/config/database.yml
 sudo -u $APP_USER -H chmod o-rwx config/database.yml
 sudo -u $APP_USER -H cp config/unicorn.rb.example config/unicorn.rb
+sudo -u $APP_USER -H git commit -am "Initial config"
 
 ##
 # Update permissions.
