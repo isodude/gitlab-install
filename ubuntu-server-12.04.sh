@@ -92,7 +92,7 @@ install_packages redis-server
 # Download and compile Ruby
 #
 echo -e "\n*== Downloading and configuring Ruby...\n"
-sudo add-apt-repository -qq -y ppa:brightbox/ruby-ng-experimental
+sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental >/dev/null
 sudo apt-get update -qq
 sudo apt-get purge -qq -y ruby1.8
 install_packages ruby2.0 ruby2.0-dev
@@ -126,7 +126,7 @@ sudo rm /tmp/gitlab.sql
 # Update Git
 #
 echo -e "\n*== Updating Git...\n"
-sudo add-apt-repository -qq -y ppa:git-core/ppa
+sudo add-apt-repository -y ppa:git-core/ppa  >/dev/null
 sudo apt-get update -qq
 install_packages git
 
