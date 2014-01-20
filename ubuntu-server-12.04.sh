@@ -19,10 +19,10 @@
 #   sudo DOMAIN_VAR=gitlab.example.com bash
 
 function install_packages() {
-  echo -n "\n*== Install "
+  echo -n "*== Install "
   until [ -z $1 ]
   do
-    sudo apt-get install -qq -y $1
+    sudo apt-get install -qq -y $1 > /dev/null
     ret=$?
     if [[ $ret -ne 0 ]]
     then
@@ -74,7 +74,6 @@ fi
 echo -e "\n*== Installing new packages...\n"
 sudo apt-get update -qq -y
 sudo apt-get upgrade -qq -y
-#sudo apt-get install -y build-essential makepasswd zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev curl git-core openssh-server redis-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
 install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
 
@@ -145,7 +144,7 @@ sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlab-shell.git $GIT
 cd $GITLAB_SHELL_ROOT
 sudo -u $APP_USER -H git checkout $GITLAB_SHELL_BRANCH
 sudo -u $APP_USER -H cp config.yml.example config.yml
-sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' /home/git/gitlab-shell/config.yml
+sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' $GITLAB_SHELL_ROOT/config.yml
 sudo -u $APP_USER -H ./bin/install
 sudo -u $APP_USER -H git commit -am "Initial config"
 ## 
@@ -192,8 +191,8 @@ done
 #
 echo -e "\n*== Installing required gems...\n"
 cd $APP_ROOT
-sudo gem install charlock_holmes --version '0.6.9.4'
-sudo -u $APP_USER -H bundle install --deployment --without development test postgres aws
+sudo gem install charlock_holmes --version '0.6.9.4'  --no-ri --no-rdoc >/dev/null
+sudo -u $APP_USER -H bundle install --deployment --without development test postgres aws >/dev/null
 
 ##
 # Run setup and add startup script.
