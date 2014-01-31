@@ -22,7 +22,7 @@ function install_packages() {
   echo -n "*== Install "
   until [ -z $1 ]
   do
-    sudo apt-get install -qq -y $1 > /dev/null
+    sudo DEBIAN_FRONTEND='noninteractive' apt-get install -qq -y $1 > /dev/null
     ret=$?
     if [[ $ret -ne 0 ]]
     then
@@ -72,8 +72,8 @@ fi
 # Installing Packages
 #
 echo -e "\n*== Installing new packages...\n"
-sudo apt-get update -qq -y
-sudo apt-get upgrade -qq -y
+sudo apt-get update -qq -y > /dev/null
+sudo apt-get upgrade -qq -y > /dev/null
 install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
 
@@ -92,8 +92,8 @@ install_packages redis-server
 #
 echo -e "\n*== Downloading and configuring Ruby...\n"
 sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental >/dev/null
-sudo apt-get update -qq
-sudo apt-get purge -qq -y ruby1.8
+sudo apt-get update -qq > /dev/null
+sudo apt-get purge -qq -y ruby1.8 > /dev/null
 install_packages ruby2.0 ruby2.0-dev
 sudo gem install bundler --no-ri --no-rdoc
 
@@ -125,7 +125,7 @@ sudo rm /tmp/gitlab.sql
 #
 echo -e "\n*== Updating Git...\n"
 sudo add-apt-repository -y ppa:git-core/ppa  >/dev/null
-sudo apt-get update -qq
+sudo apt-get update -qq > /dev/null
 install_packages git
 
 ##
