@@ -22,7 +22,7 @@ function install_packages() {
   echo -n "*== Install "
   until [ -z $1 ]
   do
-    sudo DEBIAN_FRONTEND='noninteractive' apt-get install -qq -y $1 > /dev/null
+    sudo apt-get install -qq -y $1 > /dev/null
     ret=$?
     if [[ $ret -ne 0 ]]
     then
@@ -35,6 +35,7 @@ function install_packages() {
   echo -e "complete\n"
 }
 
+export DEBIAN_FRONTEND=noninteractive
 # Set the application user and home directory.
 APP_USER=git
 USER_ROOT=/home/$APP_USER
@@ -76,6 +77,7 @@ sudo apt-get update -qq -y > /dev/null
 sudo apt-get upgrade -qq -y > /dev/null
 install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
+
 
 # Generate passwords for MySQL root and gitlab users.
 MYSQL_ROOT_PASSWORD=$(makepasswd --char=25)
@@ -139,7 +141,7 @@ sudo -u $APP_USER -H git config --global core.autocrlf input
 ## 
 # Install GitLab Shell
 #
-echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH)...\n"
+echo -e "\n*== Installing GitLab Shell ($GITLAB_SHELL_BRANCH to $GITLAB_SHELL_ROOT)...\n"
 sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlab-shell.git $GITLAB_SHELL_ROOT
 cd $GITLAB_SHELL_ROOT
 sudo -u $APP_USER -H git checkout $GITLAB_SHELL_BRANCH
@@ -150,7 +152,7 @@ sudo -u $APP_USER -H git commit -am "Initial config"
 ## 
 # Install GitLab
 #
-echo -e "\n*== Installing GitLab ($GITLAB_BRANCH)...\n"
+echo -e "\n*== Installing GitLab ($GITLAB_BRANCH to $APP_ROOT)...\n"
 sudo -u $APP_USER -H git clone https://github.com/gitlabhq/gitlabhq.git $APP_ROOT
 cd $APP_ROOT
 sudo -u $APP_USER -H git checkout $GITLAB_BRANCH
