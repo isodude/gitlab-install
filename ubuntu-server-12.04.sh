@@ -22,7 +22,7 @@ function install_packages() {
   echo -n "*== Install "
   until [ -z $1 ]
   do
-    sudo apt-get install -qq -y $1 > /dev/null
+    sudo DEBIAN_FRONTEND='noninteractive' apt-get install -qq -y $1 > /dev/null
     ret=$?
     if [[ $ret -ne 0 ]]
     then
@@ -35,7 +35,6 @@ function install_packages() {
   echo -e "complete\n"
 }
 
-export DEBIAN_FRONTEND=noninteractive
 # Set the application user and home directory.
 APP_USER=git
 USER_ROOT=/home/$APP_USER
@@ -73,8 +72,8 @@ fi
 # Installing Packages
 #
 echo -e "\n*== Installing new packages...\n"
-sudo apt-get update -qq -y > /dev/null
-sudo apt-get upgrade -qq -y > /dev/null
+sudo DEBIAN_FRONTEND='noninteractive' apt-get update -qq -y > /dev/null
+sudo DEBIAN_FRONTEND='noninteractive' apt-get upgrade -qq -y > /dev/null
 install_packages build-essential makepasswd curl git-core openssh-server checkinstall libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev python-docutils python-software-properties
 # sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y postfix-policyd-spf-python postfix
 
@@ -93,15 +92,15 @@ install_packages redis-server
 # Download and compile Ruby
 #
 echo -e "\n*== Downloading and configuring Ruby...\n"
-sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental >/dev/null
-sudo apt-get update -qq > /dev/null
-sudo apt-get purge -qq -y ruby1.8 > /dev/null
+sudo DEBIAN_FRONTEND='noninteractive' add-apt-repository -y ppa:brightbox/ruby-ng-experimental >/dev/null
+sudo DEBIAN_FRONTEND='noninteractive' apt-get update -qq > /dev/null
+sudo DEBIAN_FRONTEND='noninteractive' apt-get purge -qq -y ruby1.8 > /dev/null
 install_packages ruby2.0 ruby2.0-dev
 sudo gem install bundler --no-ri --no-rdoc
 
 # Add the git user.
 sudo adduser --disabled-login --gecos 'GitLab' $APP_USER
-
+cd $APP_USER
 ##
 # MySQL Installation
 # 
@@ -126,8 +125,8 @@ sudo rm /tmp/gitlab.sql
 # Update Git
 #
 echo -e "\n*== Updating Git...\n"
-sudo add-apt-repository -y ppa:git-core/ppa  >/dev/null
-sudo apt-get update -qq > /dev/null
+sudo DEBIAN_FRONTEND='noninteractive' add-apt-repository -y ppa:git-core/ppa  >/dev/null
+sudo DEBIAN_FRONTEND='noninteractive' apt-get update -qq > /dev/null
 install_packages git
 
 ##
@@ -149,6 +148,7 @@ sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' $GITLAB_SHELL_ROOT/config.yml
 sudo -u $APP_USER -H ./bin/install
 sudo -u $APP_USER -H git commit -am "Initial config"
+cd $APP_USER
 ## 
 # Install GitLab
 #
@@ -164,7 +164,7 @@ sudo sed -i 's/"secure password"/"'$MYSQL_GIT_PASSWORD'"/' $APP_ROOT/config/data
 sudo -u $APP_USER -H chmod o-rwx config/database.yml
 sudo -u $APP_USER -H cp config/unicorn.rb.example config/unicorn.rb
 sudo -u $APP_USER -H git commit -am "Initial config"
-
+cd $APP_USER
 ##
 # Update permissions.
 #
@@ -215,6 +215,7 @@ sudo cp lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab
 sudo ln -s /etc/nginx/sites-available/gitlab /etc/nginx/sites-enabled/gitlab
 sudo sed -i "s/YOUR_SERVER_FQDN/${DOMAIN_VAR}/" /etc/nginx/sites-enabled/gitlab
 sudo sed -i "s/127.0.0.1\tlocalhost/127.0.0.1\t${DOMAIN_VAR}/" /etc/hosts
+cd $APP_USER
 
 # Start GitLab and Nginx!
 echo -e "\n*== Starting Gitlab!\n"
