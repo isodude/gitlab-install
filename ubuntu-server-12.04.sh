@@ -100,7 +100,7 @@ sudo gem install bundler --no-ri --no-rdoc
 
 # Add the git user.
 sudo adduser --disabled-login --gecos 'GitLab' $APP_USER
-cd $APP_USER
+cd $USER_ROOT
 ##
 # MySQL Installation
 # 
@@ -148,7 +148,7 @@ sudo -u $APP_USER -H cp config.yml.example config.yml
 sudo sed -i 's/http:\/\/localhost\//'$GITLAB_URL'/' $GITLAB_SHELL_ROOT/config.yml
 sudo -u $APP_USER -H ./bin/install
 sudo -u $APP_USER -H git commit -am "Initial config"
-cd $APP_USER
+cd $USER_ROOT
 ## 
 # Install GitLab
 #
@@ -164,7 +164,7 @@ sudo sed -i 's/"secure password"/"'$MYSQL_GIT_PASSWORD'"/' $APP_ROOT/config/data
 sudo -u $APP_USER -H chmod o-rwx config/database.yml
 sudo -u $APP_USER -H cp config/unicorn.rb.example config/unicorn.rb
 sudo -u $APP_USER -H git commit -am "Initial config"
-cd $APP_USER
+cd $USER_ROOT
 ##
 # Update permissions.
 #
@@ -215,7 +215,7 @@ sudo cp lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab
 sudo ln -s /etc/nginx/sites-available/gitlab /etc/nginx/sites-enabled/gitlab
 sudo sed -i "s/YOUR_SERVER_FQDN/${DOMAIN_VAR}/" /etc/nginx/sites-enabled/gitlab
 sudo sed -i "s/127.0.0.1\tlocalhost/127.0.0.1\t${DOMAIN_VAR}/" /etc/hosts
-cd $APP_USER
+cd $USER_ROOT
 
 # Start GitLab and Nginx!
 echo -e "\n*== Starting Gitlab!\n"
