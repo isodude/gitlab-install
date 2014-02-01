@@ -222,7 +222,7 @@ echo -e "\n*== Starting Gitlab!\n"
 sudo service gitlab start
 sudo service nginx restart
 
-echo -e "root: ${MYSQL_ROOT_PASSWORD}\ngitlab: ${MYSQL_GIT_PASSWORD}"  sudo tee -a $APP_ROOT/config/mysql.yml
+echo -e "root: ${MYSQL_ROOT_PASSWORD}\ngitlab: ${MYSQL_GIT_PASSWORD}" | sudo tee -a $APP_ROOT/config/mysql.yml
 sudo -u $APP_USER -H chmod o-rwx $APP_ROOT/config/database.yml
 
 echo -e "*==================================================================*\n"
