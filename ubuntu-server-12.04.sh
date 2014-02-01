@@ -163,6 +163,7 @@ sudo -u $APP_USER cp config/database.yml.mysql config/database.yml
 sudo sed -i 's/"secure password"/"'$MYSQL_GIT_PASSWORD'"/' $APP_ROOT/config/database.yml
 sudo -u $APP_USER -H chmod o-rwx config/database.yml
 sudo -u $APP_USER -H cp config/unicorn.rb.example config/unicorn.rb
+sudo -u $APP_USER -H sed 's/timeout 30/timeout 300/1' -i config/unicorn.rb
 sudo -u $APP_USER -H git commit -am "Initial config"
 
 ##
